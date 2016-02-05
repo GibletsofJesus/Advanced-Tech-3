@@ -10,21 +10,32 @@ public class loginButton : MonoBehaviour {
     public Twitter.AccessTokenResponse m_AccessTokenResponse;
     public Twitter.RequestTokenResponse m_RequestTokenResponse;
 
-    public InputField text;
+
+    const string PLAYER_PREFS_TWITTER_USER_ID = "TwitterUserID";
+    const string PLAYER_PREFS_TWITTER_USER_SCREEN_NAME = "TwitterUserScreenName";
+    const string PLAYER_PREFS_TWITTER_USER_TOKEN = "TwitterUserToken";
+    const string PLAYER_PREFS_TWITTER_USER_TOKEN_SECRET = "TwitterUserTokenSecret";
 
     // Use this for initialization
     void Start () {
         LoadTwitterUserInfo();
+        UpdateText();
 	}
 
     void LoadTwitterUserInfo()
     {
         m_AccessTokenResponse = new Twitter.AccessTokenResponse();
 
-        m_AccessTokenResponse.UserId = userID;
-        m_AccessTokenResponse.ScreenName = ScreenName;
-        m_AccessTokenResponse.Token = Token;
-        m_AccessTokenResponse.TokenSecret = TokenSecret;
+        m_AccessTokenResponse.UserId = PlayerPrefs.GetString(PLAYER_PREFS_TWITTER_USER_ID);
+        m_AccessTokenResponse.ScreenName = PlayerPrefs.GetString(PLAYER_PREFS_TWITTER_USER_SCREEN_NAME);
+        m_AccessTokenResponse.Token = PlayerPrefs.GetString(PLAYER_PREFS_TWITTER_USER_TOKEN);
+        m_AccessTokenResponse.TokenSecret = PlayerPrefs.GetString(PLAYER_PREFS_TWITTER_USER_TOKEN_SECRET);
+
+        userID = PlayerPrefs.GetString(PLAYER_PREFS_TWITTER_USER_ID);
+        ScreenName = PlayerPrefs.GetString(PLAYER_PREFS_TWITTER_USER_SCREEN_NAME);
+        Token = PlayerPrefs.GetString(PLAYER_PREFS_TWITTER_USER_TOKEN);
+        TokenSecret = PlayerPrefs.GetString(PLAYER_PREFS_TWITTER_USER_TOKEN_SECRET);
+
 
         if (!string.IsNullOrEmpty(m_AccessTokenResponse.Token) &&
             !string.IsNullOrEmpty(m_AccessTokenResponse.ScreenName) &&
@@ -40,8 +51,16 @@ public class loginButton : MonoBehaviour {
         }
     }
 
+    public void UpdateDetails()
+    {
+        PlayerPrefs.SetString(PLAYER_PREFS_TWITTER_USER_ID, m_AccessTokenResponse.UserId);
+        PlayerPrefs.SetString(PLAYER_PREFS_TWITTER_USER_SCREEN_NAME, m_AccessTokenResponse.ScreenName);
+        PlayerPrefs.SetString(PLAYER_PREFS_TWITTER_USER_TOKEN, m_AccessTokenResponse.Token);
+        PlayerPrefs.SetString(PLAYER_PREFS_TWITTER_USER_TOKEN_SECRET, m_AccessTokenResponse.TokenSecret);
+    }
+
     // Update is called once per frame
-    void Update ()
+    public void UpdateText()
     {
         if (string.IsNullOrEmpty(consumerKey) ||string.IsNullOrEmpty(consumerSecret))
         {

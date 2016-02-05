@@ -1,8 +1,5 @@
 using UnityEngine;
 using System;
-using System.IO;
-using System.Net;
-using System.Xml;
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
@@ -13,7 +10,8 @@ using System.Security.Cryptography;
 
 namespace Twitter
 {
-    public class RequestTokenResponse
+    
+public class RequestTokenResponse
     {
         public string Token { get; set; }
         public string TokenSecret { get; set; }
@@ -225,189 +223,100 @@ namespace Twitter
                 }
             }
         }
-
-        public static IEnumerator GetTimeline(string consumerKey, string consumerSecret, AccessTokenResponse response, PostTweetCallback callback)
+        
+        public static string GetTwitterAccessToken(string consumerKey, string consumerSecret)
         {
-            string stuff = "";
+            string URL_ENCODED_KEY_AND_SECRET = Convert.ToBase64String(Encoding.UTF8.GetBytes(consumerKey + ":"+consumerSecret));
 
-            Dictionary<string, string> parameters = new Dictionary<string, string>();
-
-
-            // Add data to the form to post.
-            WWWForm form = new WWWForm();
-            form.AddField("user_id", response.ScreenName);
-            form.AddField("count", "1");
-            form.AddField("include_rts", "0");
-            form.AddField("exclude_replies", "1");
-            // HTTP header
-            var headers = new Dictionary<string, string>();
-            headers["Authorization"] = GetHeaderWithAccessToken("POST", "https://api.twitter.com/1.1/statuses/user_timeline.json", consumerKey, consumerSecret, response, new Dictionary<string, string>());
-
-            WWW web = new WWW("https://api.twitter.com/1.1/statuses/user_timeline.json", form.data, headers);
-
-            yield return web;
-            if (!string.IsNullOrEmpty(web.error))
-            {
-                Debug.Log(string.Format("PostTweet - failed. {0}\n{1}", web.error, web.text));
-                callback(false);
-            }
-            #region tat
-            /*var timelineFormat = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=GibletsofJesus&include_rts=1&exclude_replies=1&count=5";
-            //var timelineUrl = string.Format(timelineFormat, screenname);
-            HttpWebRequest timeLineRequest = (HttpWebRequest)WebRequest.Create(timelineFormat);
-
-           // timeLineRequest.Headers.Add("Authorization", timelineFormat);
-
-            string headers;
-            headers = GetHeaderWithAccessToken("GET", timelineFormat, consumerKey, consumerSecret, response, new Dictionary<string, string>());
-            timeLineRequest.Headers.Add("Authorization",headers);
-            //WebResponse webresp = timeLineRequest.GetResponse();
-            using (WebResponse webresp = timeLineRequest.GetResponse())
-            {
-                using (StreamReader sr = new StreamReader(webresp.GetResponseStream(),Encoding.GetEncoding("utf-8")))
-                {
-                    stuff = sr.ReadToEnd();
-                }
-            }*/
-            #endregion
-            Debug.Log(stuff);
-            yield return new WaitForSeconds(1f);
-        }
-
-        public static IEnumerator GetAccountDetails(string userID, string screenName, string consumerKey, string consumerSecret, AccessTokenResponse response, GetAvatarCallback callback)
-        {
-            #region first try
-            Dictionary<string, string> parameters = new Dictionary<string, string>();
-            parameters.Add("user_id", userID);
-            //parameters.Add("screen_name", screenName);
-
-            // Add data to the form to post.
-            WWWForm form = new WWWForm();
-            form.AddField("screen_name", screenName);
-            // HTTP header
-            var headers = new Dictionary<string, string>();
-            headers["Authorization"] = GetHeaderWithAccessToken("GET", GetAccountURL, consumerKey, consumerSecret, response, parameters);
-
-            WWW web = new WWW(AuthorizationURL, null, headers);
-
-            yield return web;
-            WebResponse data;
-            Debug.Log(web);
-            if (!string.IsNullOrEmpty(web.error))
-            {
-                Debug.Log(string.Format("Get Account - failed. {0}\n{1}", web.error, web.text));
-                callback(false);
-            }
-            else
-            {
-                string error = Regex.Match(web.text, @"<error>([^&]+)</error>").Groups[1].Value;
-
-                if (!string.IsNullOrEmpty(error))
-                {
-                    Debug.Log(string.Format("Get Account - failed. {0}", error));
-                    callback(false);
-                }
-                else
-                {
-                    callback(true);
-                }
-            }
-            #endregion
-
-            #region new attempt
-            /*
-            var oAuthConsumerKey = "key";
-            var oAuthConsumerSecret = "secret";
-            var oAuthUrl = "https://api.twitter.com/oauth2/token";
-
-            // Do the Authenticate
-            var authHeaderFormat = "Basic {0}";
-
-            var authHeader = string.Format(authHeaderFormat,
-                 Convert.ToBase64String(Encoding.UTF8.GetBytes(Uri.EscapeDataString(oAuthConsumerKey) + ":" +
-                        Uri.EscapeDataString((oAuthConsumerSecret)))
-                        ));
-
-            var postBody = "grant_type=client_credentials";
-
-            HttpWebRequest authRequest = (HttpWebRequest)WebRequest.Create(oAuthUrl);
-            authRequest.Headers.Add("Authorization", authHeader);
-            authRequest.Method = "POST";
-            authRequest.ContentType = "application/x-www-form-urlencoded;charset=UTF-8";
-            authRequest.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-
-            using (Stream stream = authRequest.GetRequestStream())
-            {
-                byte[] content = ASCIIEncoding.ASCII.GetBytes(postBody);
-                stream.Write(content, 0, content.Length);
-            }
-
-            authRequest.Headers.Add("Accept-Encoding", "gzip");
-
-            WebResponse authResponse = authRequest.GetResponse();
-            // deserialize into an object
-            TwitAuthenticateResponse twitAuthResponse;
-            using (authResponse)
-            {
-                using (var reader = new StreamReader(authResponse.GetResponseStream()))
-                {
-                    JavaScriptSerializer js = new JavaScriptSerializer();
-                    var objectText = reader.ReadToEnd();
-                    twitAuthResponse = JsonConvert.DeserializeObject<TwitAuthenticateResponse>(objectText);
-                }
-            }
-
-            // Do the avatar
-            var avatarFormat =
-                "https://api.twitter.com/1.1/users/show.json?screen_name={0}";
-            var avatarUrl = string.Format(avatarFormat, screenname);
-            HttpWebRequest avatarRequest = (HttpWebRequest)WebRequest.Create(avatarUrl);
-            var timelineHeaderFormat = "{0} {1}";
-            avatarRequest.Headers.Add("Authorization",
-                                        string.Format(timelineHeaderFormat, twitAuthResponse.token_type,
-                                                      response));
-            avatarRequest.Method = "Get";
-            WebResponse timeLineResponse = avatarRequest.GetResponse();
-
-            var avatarJson = string.Empty;
-            using (authResponse)
-            {
-                using (var reader = new StreamReader(timeLineResponse.GetResponseStream()))
-                {
-                    avatarJson = reader.ReadToEnd();
-                }
-            }
-            #endregion
-        }
-        */
-            #endregion
-        }
-
-        public static IEnumerator SorryAlan(string screenName, string consumerKey, string consumerSecret, AccessTokenResponse response, PostTweetCallback callback)
-        {
-            string resourceURL = "https://api.twitter.com/1.1/friends/list.json";
-
-            Dictionary<string, string> parameters = new Dictionary<string, string>();
-            parameters.Add("screen_name", screenName);
-
+            byte[] body;
+            body = Encoding.UTF8.GetBytes("grant_type=client_credentials");
+            
             Dictionary<string, string> headers = new Dictionary<string, string>();
-            //headers["Authorization"] = "Bearer " + AccessToken;
-            headers["Authorization"] = GetHeaderWithAccessToken("GET", resourceURL, consumerKey, consumerSecret, response, parameters);
+            headers["Authorization"] = "Basic " + URL_ENCODED_KEY_AND_SECRET;
 
-            WWW web = new WWW(resourceURL, null, headers);
+            WWW web = new WWW("https://api.twitter.com/oauth2/token", body, headers);
 
-            yield return web;
-
-            if (!string.IsNullOrEmpty(web.error))
+            while(!web.isDone)
             {
-                Debug.Log("Error - " + web.error);
+                Debug.Log("Retrieving acess token...");
             }
-            else
+            string output = web.text.Replace("{\"token_type\":\"bearer\",\"access_token\":\"", "");
+            output = output.Replace("\"}", "");
+
+            return output;
+        }
+
+        public struct Tweet
+        {
+            public string ID;
+            public string Text;
+            public string UserID;
+            public int RTs;
+            public int Favs;
+        }
+
+        public static void GetUserTimeline(string UserID, string AccessToken, int count)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers["Authorization"] = "Bearer " + AccessToken;
+
+            WWW web = new WWW("https://api.twitter.com/1.1/statuses/user_timeline.json?user_id=" + UserID + "&count=" + count + "&trim_user="+1, null, headers);
+
+            while (!web.isDone)
             {
-                JSONObject jsonObj = new JSONObject(web.text);
-                callback(true);
-                Debug.Log(jsonObj);
+                Debug.Log("Processing request...");
             }
+            char[] delimChars = { ',' };
+            string[] results = web.text.Split(delimChars);
+
+            Debug.Log(web.text);
+            Tweet hooeeATweet=new Tweet();
+
+            #region getData from web result
+            for (int i = 0; i < results.Length; i++)
+            {
+                if (results[i].StartsWith("\"text\":\""))
+                {
+                    results[i] = results[i].Replace("\"text\":\"", "");
+                    results[i] = results[i].Replace("\\", "");
+                    results[i] = results[i].Remove(results[i].Length - 1);
+                    if (!results[i].StartsWith("RT @"))
+                        hooeeATweet.Text = results[i];
+                }
+                else if (results[i].StartsWith("\"profile_image_url\":\""))
+                {
+                    results[i] = results[i].Replace("\"profile_image_url\":\"", "");
+                    results[i] = results[i].Replace("\\", "");
+                    results[i] = results[i].Replace("_normal", "");
+                    results[i] = results[i].Remove(results[i].Length - 1);
+                    GameObject.Find("Button").GetComponent<twitterButton>().StartCoroutine(twitterButton.setAvatar(results[i]));
+                }
+                else if (results[i].StartsWith("\"retweet_count\":"))
+                {
+                    results[i] = results[i].Replace("\"retweet_count\":", "");
+                    hooeeATweet.RTs = int.Parse(results[i]);
+                }
+                else if (results[i].StartsWith("\"favorite_count\":"))
+                {
+                    results[i] = results[i].Replace("\"favorite_count\":", "");
+                    hooeeATweet.Favs = int.Parse(results[i]);
+                }
+                else if (results[i].StartsWith("\"id\":"))
+                {
+                    results[i] = results[i].Replace("\"id\":", "");
+                    hooeeATweet.ID = results[i];
+                }
+                else if (results[i].StartsWith("\"user\":{\"id\":"))
+                {
+                    results[i] = results[i].Replace("\"user\":{\"id\":", "");
+                    hooeeATweet.UserID = results[i];
+                }
+            }
+            #endregion
+
+            //Find when 
+
+            Debug.Log(hooeeATweet.Text);
         }
 
         #endregion

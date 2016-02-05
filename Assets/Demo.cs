@@ -128,9 +128,6 @@ public class Demo : MonoBehaviour
         {
             StartCoroutine(Twitter.API.PostTweet(m_Tweet, CONSUMER_KEY, CONSUMER_SECRET, m_AccessTokenResponse,
                            new Twitter.PostTweetCallback(this.OnPostTweet)));
-
-            StartCoroutine(Twitter.API.GetTimeline(CONSUMER_KEY, CONSUMER_SECRET, m_AccessTokenResponse,
-                           new Twitter.PostTweetCallback(this.OnGetTimeline)));
         }
     }
     

@@ -36,11 +36,11 @@ public class PinButton : MonoBehaviour
 
             details.m_AccessTokenResponse = response;
 
-            //This might not actually be needed...
-            /*details.userID = response.UserId;
+            details.userID = response.UserId;
             details.ScreenName = response.ScreenName;
             details.Token = response.Token;
-            details.TokenSecret = response.TokenSecret;*/
+            details.TokenSecret = response.TokenSecret;
+            details.UpdateDetails();
         }
         else
         {
