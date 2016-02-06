@@ -271,13 +271,15 @@ namespace Twitter
             Debug.Log(web.text);
 
             //find user mentions
-            List<string> mentions = extractData(web.text, ",\"user_mentions\":", "\",\"urls\":");
+            List<string> mentions = extractData(web.text, ",\"user_mentions\":", ",\"urls\":");
             //remove if true
             string extractMe;
-            if (ammendOuputText == null)
+            if (ammendOutputText == null)
                 extractMe = web.text;
             else
-                extractMe = ammendOuputText;
+                extractMe = ammendOutputText;
+
+            Debug.Log(ammendOutputText);
 
             List<string> text = extractData(extractMe, ",\"text\":\"", "\",\"source\":");
             List<string> favs = extractData(extractMe, "\"favorite_count\":", ",\"entities\":");
@@ -299,7 +301,7 @@ namespace Twitter
                 tweets.Add(thisTweet);
             }
             caller.tweets = tweets;
-            ammendOuputText = null;
+            ammendOutputText = null;
         }
         #endregion
 
@@ -326,7 +328,7 @@ namespace Twitter
             List<string> returnMe = new List<string>();
 
             //for (int j = 0; j < startPos.Count; j++)
-            for (int j = 0; j < startPos.Count; j++)
+            for (int j = startPos.Count-1; j>-1;j--)
             {
                 string output = "";
                 for (int c = startPos[j]; c < stopPos[j]; c++)
@@ -337,13 +339,13 @@ namespace Twitter
                 output = output.Replace("\\n", " ");
                 output = output.Replace("\\", "");
 
-                if (output != "[]" && start == ",\"user_mentions\":\"")
+                if (output != "[]" && start == ",\"user_mentions\":")
                 {
                     //Then remove text from original input.
                     //Remove each section of the string STARTING AT THE END AND WORKING BACK
-                    outputText.Remove(startPos[startPos.Count-1-j], output.Length);
+                    outputText = outputText.Remove(startPos[j]+1+start.Length, output.Length-1);
                     output = null;
-                    ammendOuputText=outputText;
+                    ammendOutputText = outputText;
                 }
 
                 returnMe.Add(output);
@@ -351,7 +353,7 @@ namespace Twitter
             return returnMe;
         }
 
-        public static string ammendOuputText=null;
+        public static string ammendOutputText=null;
 
         #region OAuth Help Methods
         // The below help methods are modified from "WebRequestBuilder.cs" in Twitterizer(http://www.twitterizer.net/).
