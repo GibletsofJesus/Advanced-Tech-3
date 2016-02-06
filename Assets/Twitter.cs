@@ -10,8 +10,8 @@ using System.Security.Cryptography;
 
 namespace Twitter
 {
-    
-public class RequestTokenResponse
+
+    public class RequestTokenResponse
     {
         public string Token { get; set; }
         public string TokenSecret { get; set; }
@@ -246,80 +246,112 @@ public class RequestTokenResponse
             return output;
         }
 
-        public struct Tweet
+        [System.Serializable]
+        public class Tweet
         {
-            public string ID;
             public string Text;
+            public string ID;
             public string UserID;
             public int RTs;
             public int Favs;
         }
 
-        public static void GetUserTimeline(string UserID, string AccessToken, int count)
+        public static void GetUserTimeline(string name, string AccessToken, int count, twitterButton caller)
         {
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers["Authorization"] = "Bearer " + AccessToken;
 
-            WWW web = new WWW("https://api.twitter.com/1.1/statuses/user_timeline.json?user_id=" + UserID + "&count=" + count + "&trim_user="+1, null, headers);
+            WWW web = new WWW("https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=" + name + "&count=" + count + "&trim_user=1" + "&include_rts=0&exclude_replies=true&contributor_details=false", null, headers);
 
             while (!web.isDone)
             {
                 Debug.Log("Processing request...");
             }
-            char[] delimChars = { ',' };
-            string[] results = web.text.Split(delimChars);
 
             Debug.Log(web.text);
-            Tweet hooeeATweet=new Tweet();
 
-            #region getData from web result
-            for (int i = 0; i < results.Length; i++)
+            //find user mentions
+            List<string> mentions = extractData(web.text, ",\"user_mentions\":", "\",\"urls\":");
+            //remove if true
+            string extractMe;
+            if (ammendOuputText == null)
+                extractMe = web.text;
+            else
+                extractMe = ammendOuputText;
+
+            List<string> text = extractData(extractMe, ",\"text\":\"", "\",\"source\":");
+            List<string> favs = extractData(extractMe, "\"favorite_count\":", ",\"entities\":");
+            List<string> RTs = extractData(extractMe, "\"retweet_count\":", ",\"favorite_count\":");
+            List<string> userID = extractData(extractMe, "\"user\":{\"id\":", "\"},\"geo\":");
+            List<string> tweetID = extractData(extractMe, ",\"id\":", "\",\"text\":");
+
+            List<Tweet> tweets = new List<Tweet>();
+
+            for (int i = 0; i < text.Count; i++)
             {
-                if (results[i].StartsWith("\"text\":\""))
-                {
-                    results[i] = results[i].Replace("\"text\":\"", "");
-                    results[i] = results[i].Replace("\\", "");
-                    results[i] = results[i].Remove(results[i].Length - 1);
-                    if (!results[i].StartsWith("RT @"))
-                        hooeeATweet.Text = results[i];
-                }
-                else if (results[i].StartsWith("\"profile_image_url\":\""))
-                {
-                    results[i] = results[i].Replace("\"profile_image_url\":\"", "");
-                    results[i] = results[i].Replace("\\", "");
-                    results[i] = results[i].Replace("_normal", "");
-                    results[i] = results[i].Remove(results[i].Length - 1);
-                    GameObject.Find("Button").GetComponent<twitterButton>().StartCoroutine(twitterButton.setAvatar(results[i]));
-                }
-                else if (results[i].StartsWith("\"retweet_count\":"))
-                {
-                    results[i] = results[i].Replace("\"retweet_count\":", "");
-                    hooeeATweet.RTs = int.Parse(results[i]);
-                }
-                else if (results[i].StartsWith("\"favorite_count\":"))
-                {
-                    results[i] = results[i].Replace("\"favorite_count\":", "");
-                    hooeeATweet.Favs = int.Parse(results[i]);
-                }
-                else if (results[i].StartsWith("\"id\":"))
-                {
-                    results[i] = results[i].Replace("\"id\":", "");
-                    hooeeATweet.ID = results[i];
-                }
-                else if (results[i].StartsWith("\"user\":{\"id\":"))
-                {
-                    results[i] = results[i].Replace("\"user\":{\"id\":", "");
-                    hooeeATweet.UserID = results[i];
-                }
+                Tweet thisTweet = new Tweet();
+                thisTweet.Text = text[i];
+                thisTweet.UserID = userID[i].Substring(0, userID[i].IndexOf(",\"id_str"));
+                thisTweet.RTs = int.Parse(RTs[i]);
+                thisTweet.Favs = int.Parse(favs[i]);
+                thisTweet.ID = tweetID[i].Substring(0,tweetID[i].IndexOf(",\"id_str"));
+
+                tweets.Add(thisTweet);
             }
-            #endregion
+            caller.tweets = tweets;
+            ammendOuputText = null;
+        }
+        #endregion
 
-            //Find when 
+        public static List<string> extractData(string outputText, string start, string end)
+        {
+            List<int> startPos = new List<int>();
+            List<int> stopPos = new List<int>();
+            int i = 0;
+            //Find all the position of all mentions of "text":
+            while ((i=outputText.IndexOf(start,i))!=-1)
+            {
+                startPos.Add(i);
+                i++;
+            }
 
-            Debug.Log(hooeeATweet.Text);
+            i = 0;
+            //Do the same for "source":
+            while ((i = outputText.IndexOf(end, i)) != -1)
+            {
+                stopPos.Add(i);
+                i++;
+            }
+
+            List<string> returnMe = new List<string>();
+
+            //for (int j = 0; j < startPos.Count; j++)
+            for (int j = 0; j < startPos.Count; j++)
+            {
+                string output = "";
+                for (int c = startPos[j]; c < stopPos[j]; c++)
+                {
+                    output += outputText[c];
+                }
+                output = output.Replace(start, "");
+                output = output.Replace("\\n", " ");
+                output = output.Replace("\\", "");
+
+                if (output != "[]" && start == ",\"user_mentions\":\"")
+                {
+                    //Then remove text from original input.
+                    //Remove each section of the string STARTING AT THE END AND WORKING BACK
+                    outputText.Remove(startPos[startPos.Count-1-j], output.Length);
+                    output = null;
+                    ammendOuputText=outputText;
+                }
+
+                returnMe.Add(output);
+            }
+            return returnMe;
         }
 
-        #endregion
+        public static string ammendOuputText=null;
 
         #region OAuth Help Methods
         // The below help methods are modified from "WebRequestBuilder.cs" in Twitterizer(http://www.twitterizer.net/).

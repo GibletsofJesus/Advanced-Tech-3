@@ -12,7 +12,9 @@ public class twitterButton : MonoBehaviour {
     
     loginButton details;
     public int count;
-    public Texture test;
+    public List<Twitter.API.Tweet> tweets;
+    public InputField usernameInput;
+        
 
     // Use this for initialization
     void Start ()
@@ -35,10 +37,12 @@ public class twitterButton : MonoBehaviour {
 
     public void GetTweets()
     {
-        Twitter.API.GetUserTimeline(details.userID,Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret),count);
-        //Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret);
+        if (usernameInput.text != null)
+            Twitter.API.GetUserTimeline(usernameInput.text, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), count, this);
+        else
+            Twitter.API.GetUserTimeline(details.ScreenName, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), count, this);
     }
-    
+
     public static IEnumerator setAvatar(string url)
     {
         WWW web = new WWW(url);
