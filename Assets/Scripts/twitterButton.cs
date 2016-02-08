@@ -14,7 +14,8 @@ public class twitterButton : MonoBehaviour {
     public int count;
     public List<Twitter.API.Tweet> tweets;
     public InputField usernameInput;
-        
+    public Twitter.API.TwitterUser currentUser;
+
 
     // Use this for initialization
     void Start ()
@@ -38,9 +39,15 @@ public class twitterButton : MonoBehaviour {
     public void GetTweets()
     {
         if (usernameInput.text != null)
+        {
             Twitter.API.GetUserTimeline(usernameInput.text, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), count, this);
+            Twitter.API.GetProfile(usernameInput.text, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), this);
+        }
         else
+        {
             Twitter.API.GetUserTimeline(details.ScreenName, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), count, this);
+            Twitter.API.GetProfile(details.ScreenName, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), this);
+        }
     }
 
     public static IEnumerator setAvatar(string url)

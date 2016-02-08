@@ -2,7 +2,8 @@
 using UnityEngine.UI;
 using System.Collections;
 
-public class loginButton : MonoBehaviour {
+public class loginButton : MonoBehaviour
+{
 
     public string consumerKey, consumerSecret;
     public string userID, ScreenName, Token, TokenSecret;
@@ -17,10 +18,11 @@ public class loginButton : MonoBehaviour {
     const string PLAYER_PREFS_TWITTER_USER_TOKEN_SECRET = "TwitterUserTokenSecret";
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         LoadTwitterUserInfo();
         UpdateText();
-	}
+    }
 
     void LoadTwitterUserInfo()
     {
@@ -62,7 +64,7 @@ public class loginButton : MonoBehaviour {
     // Update is called once per frame
     public void UpdateText()
     {
-        if (string.IsNullOrEmpty(consumerKey) ||string.IsNullOrEmpty(consumerSecret))
+        if (string.IsNullOrEmpty(consumerKey) || string.IsNullOrEmpty(consumerSecret))
         {
             GetComponentInChildren<Text>().text = "You need to register your game or application first.\n Click this button, register and fill CONSUMER_KEY and CONSUMER_SECRET of Demo game object.";
             casey = 1;

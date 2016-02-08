@@ -170,14 +170,6 @@ namespace Twitter
         #region Twitter API Methods
 
         private const string PostTweetURL = "https://api.twitter.com/1.1/statuses/update.json";
-
-        //GET statuses/user_timeline
-        private const string GetTweetsURL = "https://api.twitter.com/1.1/statuses/user_timeline.json";
-
-        //GET users/show
-        public const string GetAccountURL = "https://api.twitter.com/1.1/users/show.json";
-
-
         public static IEnumerator PostTweet(string text, string consumerKey, string consumerSecret, AccessTokenResponse response, PostTweetCallback callback)
         {
             if (string.IsNullOrEmpty(text) || text.Length > 140)
@@ -256,6 +248,21 @@ namespace Twitter
             public int Favs;
         }
 
+        [System.Serializable]
+        public class TwitterUser
+        {
+            public int ID;
+            public string displayName;
+            public string username;
+            public string location;
+            public string bio;
+            public string websiteURL;
+            public string joinDate;
+            public bool verified;
+            public int totalTweets;
+            public int followers;
+        }
+
         public static void GetUserTimeline(string name, string AccessToken, int count, twitterButton caller)
         {
             Dictionary<string, string> headers = new Dictionary<string, string>();
@@ -265,10 +272,8 @@ namespace Twitter
 
             while (!web.isDone)
             {
-                Debug.Log("Processing request...");
+                Debug.Log("Grabbing timeline...");
             }
-
-            Debug.Log(web.text);
 
             //find user mentions
             List<string> mentions = extractData(web.text, ",\"user_mentions\":", ",\"urls\":");
@@ -278,8 +283,6 @@ namespace Twitter
                 extractMe = web.text;
             else
                 extractMe = ammendOutputText;
-
-            Debug.Log(ammendOutputText);
 
             List<string> text = extractData(extractMe, ",\"text\":\"", "\",\"source\":");
             List<string> favs = extractData(extractMe, "\"favorite_count\":", ",\"entities\":");
@@ -303,6 +306,63 @@ namespace Twitter
             caller.tweets = tweets;
             ammendOutputText = null;
         }
+
+        public static void GetProfile(string name, string AccessToken, twitterButton caller)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers["Authorization"] = "Bearer " + AccessToken;
+
+            WWW web = new WWW("https://api.twitter.com/1.1/users/show.json?screen_name=" + name, null, headers);
+
+            while (!web.isDone)
+            {
+                Debug.Log("Grabbing profile info...");
+            }
+
+            Debug.Log(web.text);
+
+            List<string> avatarURL = extractData(web.text, ",\"profile_image_url\":\"", "\",\"profile_image_url_https\":");
+            avatarURL[0]=avatarURL[0].Remove(avatarURL[0].IndexOf("_normal"), 7);
+            caller.StartCoroutine(twitterButton.setAvatar(avatarURL[0]));
+
+            int a = web.text.IndexOf("\"status\"", 0);
+            int b = web.text.IndexOf("\"contributors_enabled\"", 0);
+            int length = b - a;
+            string newText = web.text.Remove(a, length);
+            Debug.Log(newText);
+
+            List<string> ID = extractData(newText, "{\"id\":", ",\"id_str\":");
+            List<string> displayName = extractData(newText, ",\"name\":\"", "\",\"screen_name\":");
+            List<string> username = extractData(newText, ",\"screen_name\":\"", "\",\"location\":");
+            List<string> location = extractData(newText, ",\"location\":\"", "\",\"profile_location\":");
+            List<string> bio = extractData(newText, ",\"description\":\"", "\",\"url\":");
+            List<string> website = extractData(newText, ",\"display_url\":\"", "\",\"indices\":");
+            List<string> joinDate = extractData(newText, ",\"created_at\":\"", "\",\"favourites_count\":");
+            List<string> verified = extractData(newText, ",\"verified\":", ",\"statuses_count\":");
+            List<string> totalTweets = extractData(newText, ",\"statuses_count\":", ",\"lang\":");
+            List<string> followers = extractData(newText, ",\"followers_count\":", ",\"friends_count\":");
+
+            TwitterUser user = new TwitterUser();
+
+            user.ID = int.Parse(ID[0]);
+            user.displayName = displayName[0];
+            user.username = username[0];
+            user.location = location[0];
+            user.bio = bio[0];
+
+            if (website.Count > 0)
+                user.websiteURL = website[0];
+            else
+                user.websiteURL = null;
+
+            user.joinDate = joinDate[0];
+            user.verified = Convert.ToBoolean(verified[0]);
+            user.followers = int.Parse(followers[0]);
+            user.totalTweets = int.Parse(totalTweets[0]);
+
+            caller.currentUser = user;
+
+        }
         #endregion
 
         public static List<string> extractData(string outputText, string start, string end)
@@ -310,7 +370,6 @@ namespace Twitter
             List<int> startPos = new List<int>();
             List<int> stopPos = new List<int>();
             int i = 0;
-            //Find all the position of all mentions of "text":
             while ((i=outputText.IndexOf(start,i))!=-1)
             {
                 startPos.Add(i);
@@ -318,7 +377,6 @@ namespace Twitter
             }
 
             i = 0;
-            //Do the same for "source":
             while ((i = outputText.IndexOf(end, i)) != -1)
             {
                 stopPos.Add(i);
@@ -326,8 +384,6 @@ namespace Twitter
             }
 
             List<string> returnMe = new List<string>();
-
-            //for (int j = 0; j < startPos.Count; j++)
             for (int j = startPos.Count-1; j>-1;j--)
             {
                 string output = "";
@@ -341,8 +397,6 @@ namespace Twitter
 
                 if (output != "[]" && start == ",\"user_mentions\":")
                 {
-                    //Then remove text from original input.
-                    //Remove each section of the string STARTING AT THE END AND WORKING BACK
                     outputText = outputText.Remove(startPos[j]+1+start.Length, output.Length-1);
                     output = null;
                     ammendOutputText = outputText;
