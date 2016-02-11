@@ -16,6 +16,8 @@ public class twitterButton : MonoBehaviour {
     public InputField usernameInput;
     public Twitter.API.TwitterUser currentUser;
 
+    public string[] data;
+    public List<string> IDs = new List<string>();
 
     // Use this for initialization
     void Start ()
@@ -48,6 +50,11 @@ public class twitterButton : MonoBehaviour {
             Twitter.API.GetUserTimeline(details.ScreenName, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), count, this);
             Twitter.API.GetProfile(details.ScreenName, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), this);
         }
+    }
+
+    public void GetFollowers()
+    {
+        Twitter.API.GetFollowerIDs(usernameInput.text, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), this);
     }
 
     public static IEnumerator setAvatar(string url)

@@ -237,10 +237,22 @@ namespace Twitter
 
             return output;
         }
-
         [System.Serializable]
+        public class tw_DateTime
+        {
+            public string Weekday;
+            public string Month;
+            public string Day;
+            public string Hour;
+            public string Minute;
+            public string Second;
+            public string Offset;
+            public string Year;
+        }
+            [System.Serializable]
         public class Tweet
         {
+            public tw_DateTime dateTime;
             public string Text;
             public string ID;
             public string UserID;
@@ -284,17 +296,69 @@ namespace Twitter
             else
                 extractMe = ammendOutputText;
 
+            Debug.Log(extractMe);
+
+            List<string> dateTime = extractData(extractMe, "{\"created_at\":\"", "\",\"id\":");
             List<string> text = extractData(extractMe, ",\"text\":\"", "\",\"source\":");
             List<string> favs = extractData(extractMe, "\"favorite_count\":", ",\"entities\":");
             List<string> RTs = extractData(extractMe, "\"retweet_count\":", ",\"favorite_count\":");
             List<string> userID = extractData(extractMe, "\"user\":{\"id\":", "\"},\"geo\":");
             List<string> tweetID = extractData(extractMe, ",\"id\":", "\",\"text\":");
-
             List<Tweet> tweets = new List<Tweet>();
+
+            //format datetime
+            //
+            //For each time a space is detected, 
+            //do things with boop[2]
 
             for (int i = 0; i < text.Count; i++)
             {
                 Tweet thisTweet = new Tweet();
+
+                #region dateTime formating
+                string temp = "";
+                List<string> boop = new List<string>();
+                for (int k = 0; k < dateTime[i].Length; k++)
+                {
+                    if (dateTime[i][k] != ' ')
+                        temp += dateTime[i][k];
+                    else
+                    {
+                        boop.Add(temp);
+                        temp = "";
+                    }
+
+                    if (k == dateTime[i].Length - 1)
+                        boop.Add(temp);
+                }
+                temp = "";
+                List<string> doop = new List<string>();
+                for (int k = 0; k < boop[3].Length; k++)
+                {
+                    if (boop[3][k] != ':')
+                        temp += boop[3][k];
+                    else
+                    {
+                        doop.Add(temp);
+                        temp = "";
+                    }
+
+                    if (k == boop[3].Length - 1)
+                        doop.Add(temp);
+                }
+
+                tw_DateTime time = new tw_DateTime();
+                time.Weekday = boop[0];
+                time.Month = boop[1];
+                time.Day = boop[2];
+                time.Hour = doop[0];
+                time.Minute = doop[1];
+                time.Second = doop[2];
+                time.Year = boop[3];
+                time.Offset = boop[4];
+                #endregion
+
+                thisTweet.dateTime = time;
                 thisTweet.Text = text[i];
                 thisTweet.UserID = userID[i].Substring(0, userID[i].IndexOf(",\"id_str"));
                 thisTweet.RTs = int.Parse(RTs[i]);
@@ -305,6 +369,25 @@ namespace Twitter
             }
             caller.tweets = tweets;
             ammendOutputText = null;
+        }
+
+        public static void GetFollowerIDs(string name, string AccessToken, twitterButton caller)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            headers["Authorization"] = "Bearer " + AccessToken;
+
+            WWW web = new WWW("https://api.twitter.com/1.1/followers/ids.json?screen_name=" + name, null, headers);
+
+            while (!web.isDone)
+            {
+                Debug.Log("Follower IDs...");
+            }
+
+            Debug.Log(web.text);
+
+            List<string> dummy = extractData(web.text, "[","]");
+            List<string> IDs = extractData(dummy[0], ",");
+            caller.IDs = IDs;
         }
 
         public static void GetProfile(string name, string AccessToken, twitterButton caller)
@@ -318,8 +401,6 @@ namespace Twitter
             {
                 Debug.Log("Grabbing profile info...");
             }
-
-            Debug.Log(web.text);
 
             List<string> avatarURL = extractData(web.text, ",\"profile_image_url\":\"", "\",\"profile_image_url_https\":");
             avatarURL[0]=avatarURL[0].Remove(avatarURL[0].IndexOf("_normal"), 7);
@@ -364,6 +445,32 @@ namespace Twitter
 
         }
         #endregion
+
+        public static List<string> extractData(string outputText, string start)
+        {
+            List<int> startPos = new List<int>();
+            int i = 0;
+            while ((i = outputText.IndexOf(start, i)) != -1)
+            {
+                startPos.Add(i);
+                i++;
+            }
+            List<string> returnMe = new List<string>();
+            for (int j = startPos.Count - 2; j > -1; j--)
+            {
+                string output = "";
+                for (int c = startPos[j]; c < startPos[j+1]; c++)
+                {
+                    output += outputText[c];
+                }
+                output = output.Replace(start, "");
+                output = output.Replace("\\n", " ");
+                output = output.Replace("\\", "");
+                
+                returnMe.Add(output);
+            }
+            return returnMe;
+        }
 
         public static List<string> extractData(string outputText, string start, string end)
         {
