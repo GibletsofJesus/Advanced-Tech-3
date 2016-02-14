@@ -263,9 +263,11 @@ namespace Twitter
         [System.Serializable]
         public class TwitterUser
         {
-            public int ID;
+            public string ID;
             public string displayName;
+            public string avatarURL;
             public string username;
+            public string mostRecentTweet;
             public string location;
             public string bio;
             public string websiteURL;
@@ -295,9 +297,8 @@ namespace Twitter
                 extractMe = web.text;
             else
                 extractMe = ammendOutputText;
-
-            Debug.Log(extractMe);
-
+            
+            Debug.Log("Extracting profile data...");
             List<string> dateTime = extractData(extractMe, "{\"created_at\":\"", "\",\"id\":");
             List<string> text = extractData(extractMe, ",\"text\":\"", "\",\"source\":");
             List<string> favs = extractData(extractMe, "\"favorite_count\":", ",\"entities\":");
@@ -390,29 +391,42 @@ namespace Twitter
             caller.IDs = IDs;
         }
 
-        public static void GetProfile(string name, string AccessToken, twitterButton caller)
+        public static void GetProfile(string userID, string AccessToken, twitterButton caller)
         {
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers["Authorization"] = "Bearer " + AccessToken;
 
-            WWW web = new WWW("https://api.twitter.com/1.1/users/show.json?screen_name=" + name, null, headers);
+            //WWW web = new WWW("https://api.twitter.com/1.1/users/show.json?screen_name=" + name, null, headers);
+            WWW web = new WWW("https://api.twitter.com/1.1/users/show.json?user_id=" + userID, null, headers);
 
             while (!web.isDone)
             {
                 Debug.Log("Grabbing profile info...");
             }
-
+            Debug.Log("web: " + "\n" + web.text);
+            Debug.Log("Extracting profile data...");
             List<string> avatarURL = extractData(web.text, ",\"profile_image_url\":\"", "\",\"profile_image_url_https\":");
             avatarURL[0]=avatarURL[0].Remove(avatarURL[0].IndexOf("_normal"), 7);
-            caller.StartCoroutine(twitterButton.setAvatar(avatarURL[0]));
-
+            List<string> text = extractData(web.text, ",\"text\":\"", "\",\"source\":");
             int a = web.text.IndexOf("\"status\"", 0);
             int b = web.text.IndexOf("\"contributors_enabled\"", 0);
             int length = b - a;
-            string newText = web.text.Remove(a, length);
-            Debug.Log(newText);
+            string newText = web.text;
+            if (a!=-1&& b!=-1)
+            {
+                newText = web.text.Remove(a, length);
+                Debug.Log(newText);
+            }
+            int c = web.text.IndexOf(",\"profile_location\":", 0);
+            int d = web.text.IndexOf(",\"description\":", 0);
+            int lengthROUNDTWO = d - c;
+            if (c != -1 && d != -1)
+            {
+                Debug.Log(c + " " + d);
+                newText = newText.Remove(c+22, lengthROUNDTWO-22);
+            }
 
-            List<string> ID = extractData(newText, "{\"id\":", ",\"id_str\":");
+            List<string> anID = extractData(newText, "{\"id\":", ",\"id_str\":");
             List<string> displayName = extractData(newText, ",\"name\":\"", "\",\"screen_name\":");
             List<string> username = extractData(newText, ",\"screen_name\":\"", "\",\"location\":");
             List<string> location = extractData(newText, ",\"location\":\"", "\",\"profile_location\":");
@@ -425,9 +439,12 @@ namespace Twitter
 
             TwitterUser user = new TwitterUser();
 
-            user.ID = int.Parse(ID[0]);
+            user.ID = anID[0];
             user.displayName = displayName[0];
+            user.avatarURL = avatarURL[0];
             user.username = username[0];
+            if (text.Count>0)
+            user.mostRecentTweet = text[0];
             user.location = location[0];
             user.bio = bio[0];
 
@@ -440,8 +457,7 @@ namespace Twitter
             user.verified = Convert.ToBoolean(verified[0]);
             user.followers = int.Parse(followers[0]);
             user.totalTweets = int.Parse(totalTweets[0]);
-
-            caller.currentUser = user;
+            caller.BABY(user);
 
         }
         #endregion
@@ -498,9 +514,23 @@ namespace Twitter
                 {
                     output += outputText[c];
                 }
+
                 output = output.Replace(start, "");
-                output = output.Replace("\\n", " ");
-                output = output.Replace("\\", "");
+                output = output.Replace("\ud83c[\udf00-\udfff]", " ! ");
+                output = output.Replace("\\\"", "\"");
+                output = output.Replace("\\/", "/");
+                output = output.Replace("&amp;", "&");
+
+                List<int> fuckyou = new List<int>();
+                i = 0;
+                while ((i = output.IndexOf("\\u", i)) != -1)
+                {
+                    fuckyou.Add(i);
+                    i++;
+                }
+
+                for (int u = fuckyou.Count - 1; u > -1; u--)
+                    output = output.Remove(fuckyou[u], 6);
 
                 if (output != "[]" && start == ",\"user_mentions\":")
                 {

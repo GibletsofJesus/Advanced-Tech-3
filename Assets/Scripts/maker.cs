@@ -7,17 +7,16 @@ public class maker : MonoBehaviour {
     public twitterButton data;
     public List<Twitter.API.Tweet> tweets;
     public GameObject thing;
-    List<GameObject> allMyThings = new List<GameObject>();
+    List<GameObject> babs = new List<GameObject>();
+    public GameObject zombieGuy;
 
-    public void things()
+    public void TweetKebab()
     {
-        Debug.Log(allMyThings.Count);
-        for (int i=0; i < allMyThings.Count;i++)
+        for (int i=0; i < babs.Count;i++)
         {
-            Destroy(allMyThings[i]);
+            Destroy(babs[i]);
         }
-        allMyThings.Clear();
-        Debug.Log(allMyThings.Count);
+        babs.Clear();
         tweets = data.tweets;
 
         for (int i=0; i < tweets.Count;i++)
@@ -25,15 +24,9 @@ public class maker : MonoBehaviour {
             GameObject newThing = Instantiate(thing,new Vector3(0,1 + 1.25f*i,0),transform.rotation) as GameObject;
             newThing.GetComponent<thing>().tweet = tweets[i];
             newThing.GetComponent<thing>().hi();
-            allMyThings.Add(newThing);
+            babs.Add(newThing);
         }
 
-        Debug.Log(allMyThings.Count);
-    }
-
-    public void makeBuildings()
-    {
-        //Pick a random position inside a square
-        //have said square change size depending on # of tweets
+        Debug.Log(babs.Count);
     }
 }

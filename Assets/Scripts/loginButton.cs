@@ -59,6 +59,7 @@ public class loginButton : MonoBehaviour
         PlayerPrefs.SetString(PLAYER_PREFS_TWITTER_USER_SCREEN_NAME, m_AccessTokenResponse.ScreenName);
         PlayerPrefs.SetString(PLAYER_PREFS_TWITTER_USER_TOKEN, m_AccessTokenResponse.Token);
         PlayerPrefs.SetString(PLAYER_PREFS_TWITTER_USER_TOKEN_SECRET, m_AccessTokenResponse.TokenSecret);
+        UpdateText();
     }
 
     // Update is called once per frame
