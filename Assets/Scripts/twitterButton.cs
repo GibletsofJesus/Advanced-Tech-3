@@ -50,17 +50,17 @@ public class twitterButton : MonoBehaviour {
         }
     }
 
-    public void GetProfile()
+    public void GetProfile(bool isID, bool zombie)
     {
-        Twitter.API.GetProfile(usernameInput.text, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), this);
+        Twitter.API.GetProfile(usernameInput.text, isID, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), this,zombie);
     }
 
-    public void GetProfile(string ID)
+    public void GetProfile(string ID, bool isID, bool zombie)
     {
-        Twitter.API.GetProfile(ID, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), this);
+        Twitter.API.GetProfile(ID, isID,Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), this,zombie);
     }
 
-    public void BABY(Twitter.API.TwitterUser user)
+    public void MakeZombie(Twitter.API.TwitterUser user)
     {
         //Make a new zombie
         //with properties n shit
@@ -68,22 +68,32 @@ public class twitterButton : MonoBehaviour {
         newGuy.GetComponent<Actor>().thisUser = user;
         StartCoroutine(setAvatar(user.avatarURL, newGuy.GetComponent<Actor>()));
         newGuy.name = user.displayName;
-        newGuy.GetComponent<Actor>().offset = babs.Count * (360f / 100f);
+
+        if (IDs.Count < 100)
+            newGuy.GetComponent<Actor>().offset = babs.Count * (360f / (float)IDs.Count);
+        else
+            newGuy.GetComponent<Actor>().offset = babs.Count * (360f / 100f);
         babs.Add(newGuy);
+    }
+
+    public void templeHead(string URL)
+    {
+        StartCoroutine(setAvatar(URL, null));
     }
 
     public void GetFollowers()
     {
         IDs.Clear();
+        GetProfile(false,false);
         Twitter.API.GetFollowerIDs(usernameInput.text, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), this);
 
         Debug.Log(IDs.Count);
         if (IDs.Count < 100)
             for (int i = 0; i < IDs.Count; i++)
-                GetProfile(IDs[i]);
+                GetProfile(IDs[i],true,true);
         else
             for (int i = 0; i < 100; i++)
-                GetProfile(IDs[i]);
+                GetProfile(IDs[i], true, true);
 
     }
 
@@ -91,8 +101,10 @@ public class twitterButton : MonoBehaviour {
     {
         WWW web = new WWW(url);
         yield return web;
-        guy.getFace(web.texture);
-        //Sprite avatar = Sprite.Create(web.texture,new Rect(0,0,web.texture.width,web.texture.height), new Vector2(.5f,.5f));
+        if (guy != null)
+            guy.getFace(web.texture);
+        else
+            GameObject.Find("WORSHIP ME").GetComponent<SpriteRenderer>().sprite = Sprite.Create(web.texture,new Rect(0,0,web.texture.width,web.texture.height), new Vector2(.5f,.5f));
     }
 
     public class TwitAuthenticateResponse

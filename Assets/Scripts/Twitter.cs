@@ -391,74 +391,88 @@ namespace Twitter
             caller.IDs = IDs;
         }
 
-        public static void GetProfile(string userID, string AccessToken, twitterButton caller)
+        public static void GetProfile(string userID, bool isID, string AccessToken, twitterButton caller, bool zombie)
         {
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers["Authorization"] = "Bearer " + AccessToken;
 
-            //WWW web = new WWW("https://api.twitter.com/1.1/users/show.json?screen_name=" + name, null, headers);
-            WWW web = new WWW("https://api.twitter.com/1.1/users/show.json?user_id=" + userID, null, headers);
-
+            string url = "https://api.twitter.com/1.1/users/show.json";
+            if (isID)
+            {
+                url += "?user_id=";
+            }
+            else
+            {
+                url += "?screen_name=";
+            }
+            WWW web = new WWW(url+ userID, null, headers);
             while (!web.isDone)
             {
                 Debug.Log("Grabbing profile info...");
             }
+            Debug.Log(userID);
             Debug.Log("web: " + "\n" + web.text);
             Debug.Log("Extracting profile data...");
             List<string> avatarURL = extractData(web.text, ",\"profile_image_url\":\"", "\",\"profile_image_url_https\":");
             avatarURL[0]=avatarURL[0].Remove(avatarURL[0].IndexOf("_normal"), 7);
-            List<string> text = extractData(web.text, ",\"text\":\"", "\",\"source\":");
-            int a = web.text.IndexOf("\"status\"", 0);
-            int b = web.text.IndexOf("\"contributors_enabled\"", 0);
-            int length = b - a;
-            string newText = web.text;
-            if (a!=-1&& b!=-1)
+            if (!zombie)
             {
-                newText = web.text.Remove(a, length);
-                Debug.Log(newText);
+                caller.templeHead(avatarURL[0]);
             }
-            int c = web.text.IndexOf(",\"profile_location\":", 0);
-            int d = web.text.IndexOf(",\"description\":", 0);
-            int lengthROUNDTWO = d - c;
-            if (c != -1 && d != -1)
-            {
-                Debug.Log(c + " " + d);
-                newText = newText.Remove(c+22, lengthROUNDTWO-22);
-            }
-
-            List<string> anID = extractData(newText, "{\"id\":", ",\"id_str\":");
-            List<string> displayName = extractData(newText, ",\"name\":\"", "\",\"screen_name\":");
-            List<string> username = extractData(newText, ",\"screen_name\":\"", "\",\"location\":");
-            List<string> location = extractData(newText, ",\"location\":\"", "\",\"profile_location\":");
-            List<string> bio = extractData(newText, ",\"description\":\"", "\",\"url\":");
-            List<string> website = extractData(newText, ",\"display_url\":\"", "\",\"indices\":");
-            List<string> joinDate = extractData(newText, ",\"created_at\":\"", "\",\"favourites_count\":");
-            List<string> verified = extractData(newText, ",\"verified\":", ",\"statuses_count\":");
-            List<string> totalTweets = extractData(newText, ",\"statuses_count\":", ",\"lang\":");
-            List<string> followers = extractData(newText, ",\"followers_count\":", ",\"friends_count\":");
-
-            TwitterUser user = new TwitterUser();
-
-            user.ID = anID[0];
-            user.displayName = displayName[0];
-            user.avatarURL = avatarURL[0];
-            user.username = username[0];
-            if (text.Count>0)
-            user.mostRecentTweet = text[0];
-            user.location = location[0];
-            user.bio = bio[0];
-
-            if (website.Count > 0)
-                user.websiteURL = website[0];
             else
-                user.websiteURL = null;
+            {
+                List<string> text = extractData(web.text, ",\"text\":\"", "\",\"source\":");
+                int a = web.text.IndexOf("\"status\"", 0);
+                int b = web.text.IndexOf("\"contributors_enabled\"", 0);
+                int length = b - a;
+                string newText = web.text;
+                if (a != -1 && b != -1)
+                {
+                    newText = web.text.Remove(a, length);
+                    Debug.Log(newText);
+                }
+                int c = web.text.IndexOf(",\"profile_location\":", 0);
+                int d = web.text.IndexOf(",\"description\":", 0);
+                int lengthROUNDTWO = d - c;
+                if (c != -1 && d != -1)
+                {
+                    Debug.Log(c + " " + d);
+                    newText = newText.Remove(c + 22, lengthROUNDTWO - 22);
+                }
 
-            user.joinDate = joinDate[0];
-            user.verified = Convert.ToBoolean(verified[0]);
-            user.followers = int.Parse(followers[0]);
-            user.totalTweets = int.Parse(totalTweets[0]);
-            caller.BABY(user);
+                List<string> anID = extractData(newText, "{\"id\":", ",\"id_str\":");
+                List<string> displayName = extractData(newText, ",\"name\":\"", "\",\"screen_name\":");
+                List<string> username = extractData(newText, ",\"screen_name\":\"", "\",\"location\":");
+                List<string> location = extractData(newText, ",\"location\":\"", "\",\"profile_location\":");
+                List<string> bio = extractData(newText, ",\"description\":\"", "\",\"url\":");
+                List<string> website = extractData(newText, ",\"display_url\":\"", "\",\"indices\":");
+                List<string> joinDate = extractData(newText, ",\"created_at\":\"", "\",\"favourites_count\":");
+                List<string> verified = extractData(newText, ",\"verified\":", ",\"statuses_count\":");
+                List<string> totalTweets = extractData(newText, ",\"statuses_count\":", ",\"lang\":");
+                List<string> followers = extractData(newText, ",\"followers_count\":", ",\"friends_count\":");
 
+                TwitterUser user = new TwitterUser();
+
+                user.ID = anID[0];
+                user.displayName = displayName[0];
+                user.avatarURL = avatarURL[0];
+                user.username = username[0];
+                if (text.Count > 0)
+                    user.mostRecentTweet = text[0];
+                user.location = location[0];
+                user.bio = bio[0];
+
+                if (website.Count > 0)
+                    user.websiteURL = website[0];
+                else
+                    user.websiteURL = null;
+
+                user.joinDate = joinDate[0];
+                user.verified = Convert.ToBoolean(verified[0]);
+                user.followers = int.Parse(followers[0]);
+                user.totalTweets = int.Parse(totalTweets[0]);
+                caller.MakeZombie(user);
+            }
         }
         #endregion
 

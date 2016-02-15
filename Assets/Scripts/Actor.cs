@@ -23,21 +23,26 @@ public class Actor : MonoBehaviour {
 
     void blert()
     {
-        headAnimator.Play("openMouth");
         GameObject speeeech = Instantiate(Resources.Load("speechThing") as GameObject);
         speeeech.transform.position = transform.position;
         speeeech.transform.parent = transform;
-        speeeech.GetComponent<Rigidbody>().AddForce(-speeeech.transform.forward*100);
+        //speeeech.GetComponent<Animator>().Play("speechBoob");
+        speeeech.GetComponent<Rigidbody>().AddForce(transform.forward*5,ForceMode.Impulse);
         speeeech.GetComponent<speechBubble>().FormatString(thisUser.mostRecentTweet, speeeech.GetComponent<TextMesh>());
     }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.K))
-            blert();
-
-        if (Random.value == .42f)
-            blert();
+        {
+            headAnimator.Play("openMouth");
+            Invoke("blert", .25f);
+        }
+        if (Random.value >.99f)
+        {
+            headAnimator.Play("openMouth");
+            Invoke("blert", .25f);
+        }
         float x = 0;
         float y = 0;
 
