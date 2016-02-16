@@ -6,7 +6,6 @@ public class lookAt : MonoBehaviour {
     public Transform target;
 	// Use this for initialization
 	void Start () {
-        target.Rotate(new Vector3(0, 180, 0));
 	}
 	
 	// Update is called once per frame
@@ -14,6 +13,7 @@ public class lookAt : MonoBehaviour {
         if (target != null)
         {
             transform.LookAt(target);
+            transform.Rotate(new Vector3(0, 180, 0));
         }
 	}
 }

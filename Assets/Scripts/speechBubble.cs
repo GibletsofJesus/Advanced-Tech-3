@@ -52,10 +52,10 @@ public class speechBubble : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-        if (transform.localScale.x < 1)
+        if (transform.localScale.x < .5f)
             transform.localScale += Vector3.one * Time.deltaTime * 0.5f;
         else
-            Destroy(this.gameObject, 2);
+            Destroy(this.gameObject, 1);
 
         //transform.position += Vector3.up * Time.deltaTime;
 	}

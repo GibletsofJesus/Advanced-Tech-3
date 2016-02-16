@@ -11,7 +11,21 @@ public class Actor : MonoBehaviour {
     public float offset;
     public float speed;
     public Animator headAnimator;
-    	
+
+    public Vector3 target = Vector3.one*10;
+    public bool selected;
+
+    public void OnMouseDown()
+    {
+        var UI = GameObject.FindGameObjectWithTag("UIchanger").GetComponent<UIscripting>(); 
+        UI.newCam = GetComponentInChildren<Camera>();
+        UI.currentUser = thisUser;
+        UI.UpdateUI();
+
+        Camera.main.GetComponent<cameraOrbitControls>().selectedUnit = gameObject;
+    }
+
+    #region facetings
     public void getFace(Texture2D avatarTex)
     { 
         faceTop.GetComponent<Renderer>().material.mainTexture = avatarTex;
@@ -25,24 +39,56 @@ public class Actor : MonoBehaviour {
     {
         GameObject speeeech = Instantiate(Resources.Load("speechThing") as GameObject);
         speeeech.transform.position = transform.position;
-        speeeech.transform.parent = transform;
+        //speeeech.transform.parent = transform;
         //speeeech.GetComponent<Animator>().Play("speechBoob");
-        speeeech.GetComponent<Rigidbody>().AddForce(transform.forward*5,ForceMode.Impulse);
+        speeeech.GetComponent<Rigidbody>().AddForce(transform.forward*6f,ForceMode.VelocityChange);
         speeeech.GetComponent<speechBubble>().FormatString(thisUser.mostRecentTweet, speeeech.GetComponent<TextMesh>());
     }
 
+    bool allowBlert=true;
+
+    IEnumerator blertReset()
+    {
+        yield return new WaitForSeconds(2f);
+        allowBlert = true;
+    }
+
+    #endregion
+
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.K))
+        if (Input.GetKeyDown(KeyCode.K) && allowBlert)
         {
+            allowBlert = false;
+            StartCoroutine(blertReset());
             headAnimator.Play("openMouth");
-            Invoke("blert", .25f);
+            Invoke("blert", .5f);
         }
-        if (Random.value >.99f)
+        if (Random.value > .97f && allowBlert)
         {
+            allowBlert = false;
+            StartCoroutine(blertReset());
             headAnimator.Play("openMouth");
-            Invoke("blert", .25f);
+            Invoke("blert", .5f);
         }
+
+        //transform.rotation = Quaternion.Euler(transform.rotation.x, transform.rotation.y, transform.rotation.z);
+        var rot = Quaternion.LookRotation(target);
+        rot.eulerAngles = new Vector3(0, rot.eulerAngles.y, 0);
+        transform.rotation = rot;
+        Vector3 distance = target - transform.position;
+        if (distance.sqrMagnitude > .1f)
+        {
+            transform.Translate(distance.normalized * Time.deltaTime, Space.World);
+        }
+           
+
+        if (walkInCircle)
+        circleWalk();
+    }
+    public bool walkInCircle;
+    void circleWalk()
+    {
         float x = 0;
         float y = 0;
 
