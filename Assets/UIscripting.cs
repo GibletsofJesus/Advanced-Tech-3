@@ -18,8 +18,8 @@ public class UIscripting : MonoBehaviour {
         infoText.text += currentUser.displayName + "\n" + "\n";
         infoText.text += "@"+currentUser.username + "\n" + "\n";
         infoText.text += currentUser.bio + "\n" + "\n";
-        infoText.text += currentUser.joinDate.Remove(10,15) + "\n" + "\n";
-        infoText.text += currentUser.totalTweets + "\n" + "\n";
-        infoText.text += currentUser.followers + "\n" + "\n";
+        infoText.text += "Join date: "+currentUser.joinDate.Remove(10,15) + "\n" + "\n";
+        infoText.text += "Total tweets: " +currentUser.totalTweets + "\n" + "\n";
+        infoText.text += "Followers: "+ currentUser.followers + "\n" + "\n";
     }
 }

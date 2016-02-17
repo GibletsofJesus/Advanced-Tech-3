@@ -37,11 +37,8 @@ public class cameraOrbitControls : MonoBehaviour
     public Transform newTarget;
     Transform dummyTarget;
     public Vector3 newTargetOffset;
-    public GameObject selectedUnit;
-    GameObject sphereCursor;
     public void Init()
     {
-        sphereCursor = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         //If there is no target, create a temporary target at 'distance' from the cameras current viewpoint
         if (!target)
         {
@@ -66,21 +63,6 @@ public class cameraOrbitControls : MonoBehaviour
         yDeg = Vector3.Angle(Vector3.up, transform.up);
     }
     
-    void Update()
-    {
-        if (Input.GetMouseButton(1) && selectedUnit!=null)
-        {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            Debug.DrawRay(ray.origin, ray.direction, Color.green);
-
-            RaycastHit hit;
-            if (Physics.Raycast(ray.origin, ray.direction, out hit, Mathf.Infinity))
-            {
-                sphereCursor.transform.position = new Vector3(hit.point.x, selectedUnit.transform.position.y, hit.point.z);
-                selectedUnit.GetComponent<Actor>().target = new Vector3(hit.point.x, selectedUnit.transform.position.y, hit.point.z);
-            }
-        }
-    }
 
     /*
      * Camera logic on LateUpdate to only update after all character movement logic has been handled. 
@@ -124,7 +106,10 @@ public class cameraOrbitControls : MonoBehaviour
         }
 
         if (Input.GetKeyDown(KeyCode.F))
+        {
+            newTargetOffset = Vector3.zero;
             target.transform.position = Vector3.zero;
+        }
 
         ////////Orbit Position
 
