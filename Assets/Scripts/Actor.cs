@@ -5,7 +5,7 @@ public class Actor : MonoBehaviour {
 
     public Twitter.API.Tweet thisTweet;
     public Twitter.API.TwitterUser thisUser;
-    public GameObject faceTop, faceBot;
+    public GameObject faceTop, faceBot, selectionArrow;
     private float angle = 0;
     public float radius = 10;
     public float offset;
@@ -38,9 +38,10 @@ public class Actor : MonoBehaviour {
     {
         manager = Camera.main.GetComponent<unitManager>();
     }
+
     public void OnMouseDown()
     {
-        Camera.main.GetComponent<unitManager>().unitSelection(gameObject);
+       manager.unitSelection(gameObject);
     }
 
     #region facetings
@@ -76,6 +77,22 @@ public class Actor : MonoBehaviour {
 
     void Update()
     {
+        #region selectionTings
+        if (GetComponentInChildren<Renderer>().isVisible && Input.GetMouseButton(0))
+        {
+            Vector3 camPos = Camera.main.WorldToScreenPoint(transform.position);
+            camPos.y = (Screen.height - camPos.y);
+            if (Camera.main.GetComponent<unitManager>().selection.Contains(camPos))
+                manager.addUnitToSelection(gameObject);
+            else if (manager.selectedUnits.Contains(gameObject))
+            {
+                selected = false;
+                manager.selectedUnits.Remove(gameObject);
+            }
+        }
+        #endregion
+
+        #region blerting
         if (Input.GetKeyDown(KeyCode.K) && allowBlert)
         {
             allowBlert = false;
@@ -88,8 +105,10 @@ public class Actor : MonoBehaviour {
             StartCoroutine(blertReset());
             headAnimator.Play("openMouth");
         }
+        #endregion
 
-        Quaternion rot=new Quaternion();
+        #region face and move in direction
+        Quaternion rot =new Quaternion();
         var y = Mathf.Atan2((target.x - transform.position.x), (target.z - transform.position.z)) * Mathf.Rad2Deg;
         rot.eulerAngles = new Vector3(0, y,0);
         transform.rotation = rot;
@@ -118,6 +137,12 @@ public class Actor : MonoBehaviour {
         
         moveSpeed = Mathf.Lerp(moveSpeed, newMoveSpeed, Time.deltaTime*3);
         bodyAnimator.SetFloat("speed", animSpeed = Mathf.Lerp(animSpeed, newAnimSpeed, Time.deltaTime*3));
+        #endregion
+
+        if (selected)
+            selectionArrow.SetActive(true);
+        else
+            selectionArrow.SetActive(false);
 
         if (walkInCircle)
         circleWalk();

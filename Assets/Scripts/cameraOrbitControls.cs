@@ -79,8 +79,18 @@ public class cameraOrbitControls : MonoBehaviour
         {
             //desiredDistance -= Input.GetAxis("Mouse Y") * Time.deltaTime * zoomRate * 0.25f * Mathf.Abs(desiredDistance);
         }
-        // If middle mouse and left alt are selected? ORBIT
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButton(2) && Input.GetKey(KeyCode.LeftShift))
+        {
+            dummyTarget.rotation = transform.rotation;
+            dummyTarget.position = newTarget.position+newTargetOffset;
+            //grab the rotation of the camera so we can move in a psuedo local XY space
+            dummyTarget.rotation = transform.rotation;
+            dummyTarget.Translate(Vector3.right * -Input.GetAxis("Mouse X") * panSpeed);
+            dummyTarget.Translate(transform.up * -Input.GetAxis("Mouse Y") * panSpeed, Space.World);
+
+            newTargetOffset = dummyTarget.position - newTarget.position;
+        }
+        else if (Input.GetMouseButton(2))
         {
             xDeg += Input.GetAxis("Mouse X") * xSpeed * 0.02f;
             yDeg -= Input.GetAxis("Mouse Y") * ySpeed * 0.02f;
@@ -92,19 +102,6 @@ public class cameraOrbitControls : MonoBehaviour
             // set camera rotation f
             desiredRotation = Quaternion.Euler(yDeg, xDeg, 0);
         }
-        // otherwise if middle mouse is selected, we pan by way of transforming the target in screenspace
-        else if (Input.GetMouseButton(2))
-        {
-            dummyTarget.rotation = transform.rotation;
-            dummyTarget.position = newTarget.position+newTargetOffset;
-            //grab the rotation of the camera so we can move in a psuedo local XY space
-            dummyTarget.rotation = transform.rotation;
-            dummyTarget.Translate(Vector3.right * -Input.GetAxis("Mouse X") * panSpeed);
-            dummyTarget.Translate(transform.up * -Input.GetAxis("Mouse Y") * panSpeed, Space.World);
-
-            newTargetOffset = dummyTarget.position - newTarget.position;
-        }
-
         if (Input.GetKeyDown(KeyCode.F))
         {
             newTargetOffset = Vector3.zero;
