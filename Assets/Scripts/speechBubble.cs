@@ -49,7 +49,7 @@ public class speechBubble : MonoBehaviour {
             textObject.text = result;
         }
     }
-
+    
     // Update is called once per frame
     void Update () {
         if (transform.localScale.x < .5f)

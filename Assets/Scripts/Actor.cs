@@ -8,7 +8,7 @@ public class Actor : MonoBehaviour {
     public GameObject faceTop, faceBot, selectionArrow;
     private float angle = 0;
     public float radius = 10;
-    public float offset;
+    public float offset, blertIntensity;
     float animSpeed=.6f,moveSpeed=1;
     public Animator headAnimator,bodyAnimator;
 
@@ -17,22 +17,38 @@ public class Actor : MonoBehaviour {
     public bool allowMove=true;
     unitManager manager;
 
-    void OnCollisionEnter(Collision col)
+    #region collision tings
+    void OnTriggerEnter(Collider col)
+    {
+        if (col.gameObject.tag == "Base")
+            allowMove = false;
+    }
+
+    void OnTriggerStay(Collider col)
     {
         if (col.gameObject.tag == "Base")
         {
-            Debug.Log("col");
-            allowMove = false;
+            //move away from the temple
+            Quaternion rot = new Quaternion();
+            var y = Mathf.Atan2((col.bounds.center.x - transform.position.x), (
+            col.bounds.center.z - transform.position.z)) * Mathf.Rad2Deg;
+            rot.eulerAngles = new Vector3(0, y, 0);
+            transform.rotation = rot;
+            Vector3 dir = col.bounds.center - transform.position;
+            dir.y = 0;
+            transform.Translate(-dir.normalized * Time.deltaTime * 1, Space.World);
         }
-        if (col.gameObject.tag!="Speech")
-            Debug.Log(col.gameObject.tag);
     }
-
-    void OnCollisionExit(Collision collisionInfo)
+    
+    void OnTriggerExit(Collider collisionInfo)
     {
         if (collisionInfo.transform.tag == "Base")
+        {
+            target = transform.position;
             allowMove = true;
+        }
     }
+    #endregion
 
     void Awake()
     {
@@ -41,7 +57,13 @@ public class Actor : MonoBehaviour {
 
     public void OnMouseDown()
     {
-       manager.unitSelection(gameObject);
+        manager.unitSelection(gameObject);
+
+        var UI = GameObject.FindGameObjectWithTag("UIchanger").GetComponent<UIscripting>();
+        UI.newCam = GetComponentInChildren<Camera>();
+        UI.currentUser = GetComponent<Actor>().thisUser;
+        GetComponent<Actor>().selected = true;
+        UI.UpdateUI();
     }
 
     #region facetings
@@ -61,9 +83,7 @@ public class Actor : MonoBehaviour {
         yield return new WaitForSeconds(.5f);
         GameObject speeeech = Instantiate(Resources.Load("speechThing") as GameObject);
         speeeech.transform.position = transform.position;
-        //speeeech.transform.parent = transform;
-        //speeeech.GetComponent<Animator>().Play("speechBoob");
-        speeeech.GetComponent<Rigidbody>().AddForce(transform.forward * 12f, ForceMode.VelocityChange);
+        speeeech.GetComponent<Rigidbody>().AddForce(transform.forward * blertIntensity, ForceMode.VelocityChange);
         speeeech.GetComponent<speechBubble>().FormatString(thisUser.mostRecentTweet, speeeech.GetComponent<TextMesh>());
 
         yield return new WaitForSeconds(0.5f);

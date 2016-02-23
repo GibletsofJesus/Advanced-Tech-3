@@ -14,7 +14,6 @@ public class twitterButton : MonoBehaviour {
     public int count;
     public List<Twitter.API.Tweet> tweets;
     public InputField usernameInput;
-
     public string[] data;
     public List<string> IDs = new List<string>();
     List<GameObject> babs = new List<GameObject>();
@@ -48,6 +47,9 @@ public class twitterButton : MonoBehaviour {
         {
             Twitter.API.GetUserTimeline(details.ScreenName, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), count, this);
         }
+
+        Twitter.API.GetProfile(usernameInput.text, false, Twitter.API.GetTwitterAccessToken(details.consumerKey, details.consumerSecret), this, false);
+
     }
 
     public void GetProfile(bool isID, bool zombie)
@@ -76,9 +78,12 @@ public class twitterButton : MonoBehaviour {
         babs.Add(newGuy);
     }
 
-    public void templeHead(string URL)
+    public void templeHead(string URL,Twitter.API.TwitterUser user)
     {
         StartCoroutine(setAvatar(URL, null));
+        GameObject temp = GameObject.FindGameObjectWithTag("Base");
+        Debug.Log(temp.name);
+       temp.GetComponent<temple>().thisUser = user;
     }
 
     public void GetFollowers()

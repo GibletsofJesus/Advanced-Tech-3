@@ -15,15 +15,13 @@ public class unitManager : MonoBehaviour
 
     public void unitSelection(GameObject unit)
     {
+        for (int i=0;i < selectedUnits.Count;i++)
+            selectedUnits[i].GetComponent<Actor>().selected = false;
+
         selectedUnits.Clear();
         if (selectedUnit)
             selectedUnit.GetComponent<Actor>().selected = false;
         selectedUnit = unit;
-        var UI = GameObject.FindGameObjectWithTag("UIchanger").GetComponent<UIscripting>();
-        UI.newCam = unit.GetComponentInChildren<Camera>();
-        UI.currentUser = unit.GetComponent<Actor>().thisUser;
-        unit.GetComponent<Actor>().selected = true;
-        UI.UpdateUI();
     }
 
     public void addUnitToSelection(GameObject unit)
@@ -54,8 +52,7 @@ public class unitManager : MonoBehaviour
 
         if (Input.GetMouseButton(0))
             selection = new Rect(startClick.x, (Screen.height - startClick.y), Input.mousePosition.x - startClick.x, (Screen.height - Input.mousePosition.y) - (Screen.height - startClick.y));
-
-        Debug.Log(selection);
+        
     }
 
     void OnGUI()
@@ -71,6 +68,7 @@ public class unitManager : MonoBehaviour
     {
         checkCamera();
 
+        //Move multiple units
         if (Input.GetMouseButtonDown(1) && selectedUnits.Count > 0)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -80,16 +78,27 @@ public class unitManager : MonoBehaviour
             {
                 if (hit.transform.gameObject.tag == "PlayArea")
                 {
-                    GameObject curs = Instantiate(sphereCursor, new Vector3(hit.point.x, 0, hit.point.z), Quaternion.Euler(Vector3.zero)) as GameObject;
-                    Destroy(curs, 1.98f);
-                    sphereCursor.transform.position = new Vector3(hit.point.x, 1.1875f, hit.point.z);
+                    //ok so we have where we want to go
+                    //bad news to all you units, not all of you go go to the same point :(
+
+                    //add an offset to each target, based of the distance between units at the moment
+                    List<Vector3> offset = new List<Vector3>();
+
+                    for (int i = 0; i < selectedUnits.Count;i++)
+                    {
+                        offset.Add(selectedUnits[i].transform.position - selectedUnits[0].transform.position);
+                    }
                     for (int i = 0; i < selectedUnits.Count; i++)
                     {
-                        selectedUnits[i].GetComponent<Actor>().target = new Vector3(hit.point.x, 1.1875f, hit.point.z);
+                        GameObject curs = Instantiate(sphereCursor, new Vector3(hit.point.x+ offset[i].x, 0, hit.point.z+ offset[i].z), Quaternion.Euler(Vector3.zero)) as GameObject;
+                        Destroy(curs, 1.98f);
+                        sphereCursor.transform.position = new Vector3(hit.point.x + offset[i].x, 1.1875f, hit.point.z + offset[i].z);
+                        selectedUnits[i].GetComponent<Actor>().target = new Vector3(hit.point.x + offset[i].x, 1.1875f, hit.point.z+offset[i].z);
                     }
                 }
             }
         }
+        //Move a single unit
         else if (Input.GetMouseButtonDown(1) && selectedUnit != null)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);

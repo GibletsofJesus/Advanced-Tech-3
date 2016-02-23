@@ -46,7 +46,7 @@ namespace Twitter
 
         public static IEnumerator GetRequestToken(string consumerKey, string consumerSecret, RequestTokenCallback callback)
         {
-            
+
             WWW web = WWWRequestToken(consumerKey, consumerSecret);
 
             yield return web;
@@ -145,14 +145,14 @@ namespace Twitter
             dummmy[0] = 0;
 
             // HTTP header
-            var headers = new Dictionary<string,string>();
+            var headers = new Dictionary<string, string>();
             Dictionary<string, string> parameters = new Dictionary<string, string>();
             AddDefaultOAuthParams(parameters, consumerKey, consumerSecret);
             parameters.Add("oauth_token", requestToken);
             parameters.Add("oauth_verifier", pin);
 
             headers["Authorization"] = GetFinalOAuthHeader("POST", AccessTokenURL, parameters);
-            
+
             return new WWW(AccessTokenURL, dummmy, headers);
         }
 
@@ -187,17 +187,17 @@ namespace Twitter
                 WWWForm form = new WWWForm();
                 form.AddField("status", text);
                 // HTTP header
-                var headers = new Dictionary<string,string>();
+                var headers = new Dictionary<string, string>();
                 headers["Authorization"] = GetHeaderWithAccessToken("POST", PostTweetURL, consumerKey, consumerSecret, response, parameters);
 
                 WWW web = new WWW(PostTweetURL, form.data, headers);
-               
+
                 yield return web;
 
                 if (!string.IsNullOrEmpty(web.error))
                 {
-					Debug.Log(string.Format("PostTweet - failed. {0}\n{1}", web.error, web.text));
-					callback(false);
+                    Debug.Log(string.Format("PostTweet - failed. {0}\n{1}", web.error, web.text));
+                    callback(false);
                 }
                 else
                 {
@@ -215,20 +215,20 @@ namespace Twitter
                 }
             }
         }
-        
+
         public static string GetTwitterAccessToken(string consumerKey, string consumerSecret)
         {
-            string URL_ENCODED_KEY_AND_SECRET = Convert.ToBase64String(Encoding.UTF8.GetBytes(consumerKey + ":"+consumerSecret));
+            string URL_ENCODED_KEY_AND_SECRET = Convert.ToBase64String(Encoding.UTF8.GetBytes(consumerKey + ":" + consumerSecret));
 
             byte[] body;
             body = Encoding.UTF8.GetBytes("grant_type=client_credentials");
-            
+
             Dictionary<string, string> headers = new Dictionary<string, string>();
             headers["Authorization"] = "Basic " + URL_ENCODED_KEY_AND_SECRET;
 
             WWW web = new WWW("https://api.twitter.com/oauth2/token", body, headers);
 
-            while(!web.isDone)
+            while (!web.isDone)
             {
                 Debug.Log("Retrieving acess token...");
             }
@@ -249,7 +249,7 @@ namespace Twitter
             public string Offset;
             public string Year;
         }
-            [System.Serializable]
+        [System.Serializable]
         public class Tweet
         {
             public tw_DateTime dateTime;
@@ -297,7 +297,7 @@ namespace Twitter
                 extractMe = web.text;
             else
                 extractMe = ammendOutputText;
-            
+
             Debug.Log("Extracting profile data...");
             List<string> dateTime = extractData(extractMe, "{\"created_at\":\"", "\",\"id\":");
             List<string> text = extractData(extractMe, ",\"text\":\"", "\",\"source\":");
@@ -364,7 +364,7 @@ namespace Twitter
                 thisTweet.UserID = userID[i].Substring(0, userID[i].IndexOf(",\"id_str"));
                 thisTweet.RTs = int.Parse(RTs[i]);
                 thisTweet.Favs = int.Parse(favs[i]);
-                thisTweet.ID = tweetID[i].Substring(0,tweetID[i].IndexOf(",\"id_str"));
+                thisTweet.ID = tweetID[i].Substring(0, tweetID[i].IndexOf(",\"id_str"));
 
                 tweets.Add(thisTweet);
             }
@@ -381,12 +381,12 @@ namespace Twitter
 
             while (!web.isDone)
             {
-                Debug.Log("Follower IDs...");
+                Debug.Log("Retrieving follower IDs...");
             }
 
             Debug.Log(web.text);
 
-            List<string> dummy = extractData(web.text, "[","]");
+            List<string> dummy = extractData(web.text, "[", "]");
             List<string> IDs = extractData(dummy[0], ",");
             caller.IDs = IDs;
         }
@@ -405,7 +405,7 @@ namespace Twitter
             {
                 url += "?screen_name=";
             }
-            WWW web = new WWW(url+ userID, null, headers);
+            WWW web = new WWW(url + userID, null, headers);
             while (!web.isDone)
             {
                 Debug.Log("Grabbing profile info...");
@@ -414,65 +414,63 @@ namespace Twitter
             Debug.Log("web: " + "\n" + web.text);
             Debug.Log("Extracting profile data...");
             List<string> avatarURL = extractData(web.text, ",\"profile_image_url\":\"", "\",\"profile_image_url_https\":");
-            avatarURL[0]=avatarURL[0].Remove(avatarURL[0].IndexOf("_normal"), 7);
-            if (!zombie)
+            avatarURL[0] = avatarURL[0].Remove(avatarURL[0].IndexOf("_normal"), 7);
+
+            List<string> text = extractData(web.text, ",\"text\":\"", "\",\"source\":");
+            int a = web.text.IndexOf("\"status\"", 0);
+            int b = web.text.IndexOf("\"contributors_enabled\"", 0);
+            int length = b - a;
+            string newText = web.text;
+            if (a != -1 && b != -1)
             {
-                caller.templeHead(avatarURL[0]);
+                newText = web.text.Remove(a, length);
+                Debug.Log(newText);
             }
+            int c = web.text.IndexOf(",\"profile_location\":", 0);
+            int d = web.text.IndexOf(",\"description\":", 0);
+            int lengthROUNDTWO = d - c;
+            if (c != -1 && d != -1)
+            {
+                Debug.Log(c + " " + d);
+                newText = newText.Remove(c + 22, lengthROUNDTWO - 22);
+            }
+
+            List<string> anID = extractData(newText, "{\"id\":", ",\"id_str\":");
+            List<string> displayName = extractData(newText, ",\"name\":\"", "\",\"screen_name\":");
+            List<string> username = extractData(newText, ",\"screen_name\":\"", "\",\"location\":");
+            List<string> location = extractData(newText, ",\"location\":\"", "\",\"profile_location\":");
+            List<string> bio = extractData(newText, ",\"description\":\"", "\",\"url\":");
+            List<string> website = extractData(newText, ",\"display_url\":\"", "\",\"indices\":");
+            List<string> joinDate = extractData(newText, ",\"created_at\":\"", "\",\"favourites_count\":");
+            List<string> verified = extractData(newText, ",\"verified\":", ",\"statuses_count\":");
+            List<string> totalTweets = extractData(newText, ",\"statuses_count\":", ",\"lang\":");
+            List<string> followers = extractData(newText, ",\"followers_count\":", ",\"friends_count\":");
+
+            TwitterUser user = new TwitterUser();
+
+            user.ID = anID[0];
+            user.displayName = displayName[0];
+            user.avatarURL = avatarURL[0];
+            user.username = username[0];
+            if (text.Count > 0)
+                user.mostRecentTweet = text[0];
+            user.location = location[0];
+            user.bio = bio[0];
+
+            if (website.Count > 0)
+                user.websiteURL = website[0];
             else
-            {
-                List<string> text = extractData(web.text, ",\"text\":\"", "\",\"source\":");
-                int a = web.text.IndexOf("\"status\"", 0);
-                int b = web.text.IndexOf("\"contributors_enabled\"", 0);
-                int length = b - a;
-                string newText = web.text;
-                if (a != -1 && b != -1)
-                {
-                    newText = web.text.Remove(a, length);
-                    Debug.Log(newText);
-                }
-                int c = web.text.IndexOf(",\"profile_location\":", 0);
-                int d = web.text.IndexOf(",\"description\":", 0);
-                int lengthROUNDTWO = d - c;
-                if (c != -1 && d != -1)
-                {
-                    Debug.Log(c + " " + d);
-                    newText = newText.Remove(c + 22, lengthROUNDTWO - 22);
-                }
+                user.websiteURL = null;
 
-                List<string> anID = extractData(newText, "{\"id\":", ",\"id_str\":");
-                List<string> displayName = extractData(newText, ",\"name\":\"", "\",\"screen_name\":");
-                List<string> username = extractData(newText, ",\"screen_name\":\"", "\",\"location\":");
-                List<string> location = extractData(newText, ",\"location\":\"", "\",\"profile_location\":");
-                List<string> bio = extractData(newText, ",\"description\":\"", "\",\"url\":");
-                List<string> website = extractData(newText, ",\"display_url\":\"", "\",\"indices\":");
-                List<string> joinDate = extractData(newText, ",\"created_at\":\"", "\",\"favourites_count\":");
-                List<string> verified = extractData(newText, ",\"verified\":", ",\"statuses_count\":");
-                List<string> totalTweets = extractData(newText, ",\"statuses_count\":", ",\"lang\":");
-                List<string> followers = extractData(newText, ",\"followers_count\":", ",\"friends_count\":");
-
-                TwitterUser user = new TwitterUser();
-
-                user.ID = anID[0];
-                user.displayName = displayName[0];
-                user.avatarURL = avatarURL[0];
-                user.username = username[0];
-                if (text.Count > 0)
-                    user.mostRecentTweet = text[0];
-                user.location = location[0];
-                user.bio = bio[0];
-
-                if (website.Count > 0)
-                    user.websiteURL = website[0];
-                else
-                    user.websiteURL = null;
-
-                user.joinDate = joinDate[0];
-                user.verified = Convert.ToBoolean(verified[0]);
-                user.followers = int.Parse(followers[0]);
-                user.totalTweets = int.Parse(totalTweets[0]);
+            user.joinDate = joinDate[0];
+            user.verified = Convert.ToBoolean(verified[0]);
+            user.followers = int.Parse(followers[0]);
+            user.totalTweets = int.Parse(totalTweets[0]);
+            if (!zombie)
+                caller.templeHead(avatarURL[0],user);
+            else
                 caller.MakeZombie(user);
-            }
+
         }
         #endregion
 
@@ -486,17 +484,23 @@ namespace Twitter
                 i++;
             }
             List<string> returnMe = new List<string>();
-            for (int j = startPos.Count - 2; j > -1; j--)
+            for (int j = startPos.Count - 1; j > -1; j--)
             {
                 string output = "";
-                for (int c = startPos[j]; c < startPos[j+1]; c++)
+                int endPoint = outputText.Length;
+                if (j + 1 < startPos.Count)
+                {
+                    endPoint = startPos[j + 1];
+                }
+                Debug.Log(endPoint);
+                for (int c = startPos[j]; c < endPoint; c++)
                 {
                     output += outputText[c];
                 }
                 output = output.Replace(start, "");
                 output = output.Replace("\\n", " ");
                 output = output.Replace("\\", "");
-                
+
                 returnMe.Add(output);
             }
             return returnMe;
@@ -507,7 +511,7 @@ namespace Twitter
             List<int> startPos = new List<int>();
             List<int> stopPos = new List<int>();
             int i = 0;
-            while ((i=outputText.IndexOf(start,i))!=-1)
+            while ((i = outputText.IndexOf(start, i)) != -1)
             {
                 startPos.Add(i);
                 i++;
@@ -521,7 +525,7 @@ namespace Twitter
             }
 
             List<string> returnMe = new List<string>();
-            for (int j = startPos.Count-1; j>-1;j--)
+            for (int j = startPos.Count - 1; j > -1; j--)
             {
                 string output = "";
                 for (int c = startPos[j]; c < stopPos[j]; c++)
@@ -548,7 +552,7 @@ namespace Twitter
 
                 if (output != "[]" && start == ",\"user_mentions\":")
                 {
-                    outputText = outputText.Remove(startPos[j]+1+start.Length, output.Length-1);
+                    outputText = outputText.Remove(startPos[j] + 1 + start.Length, output.Length - 1);
                     output = null;
                     ammendOutputText = outputText;
                 }
@@ -558,7 +562,7 @@ namespace Twitter
             return returnMe;
         }
 
-        public static string ammendOutputText=null;
+        public static string ammendOutputText = null;
 
         #region OAuth Help Methods
         // The below help methods are modified from "WebRequestBuilder.cs" in Twitterizer(http://www.twitterizer.net/).
