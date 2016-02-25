@@ -416,7 +416,7 @@ namespace Twitter
             List<string> avatarURL = extractData(web.text, ",\"profile_image_url\":\"", "\",\"profile_image_url_https\":");
             avatarURL[0] = avatarURL[0].Remove(avatarURL[0].IndexOf("_normal"), 7);
 
-            List<string> text = extractData(web.text, ",\"text\":\"", "\",\"source\":");
+            List<string> text = extractData(web.text, ",\"text\":\"", ",\"source\":");
             int a = web.text.IndexOf("\"status\"", 0);
             int b = web.text.IndexOf("\"contributors_enabled\"", 0);
             int length = b - a;
@@ -523,12 +523,12 @@ namespace Twitter
                 stopPos.Add(i);
                 i++;
             }
-
-            List<string> returnMe = new List<string>();
+            
+                List<string> returnMe = new List<string>();
             for (int j = startPos.Count - 1; j > -1; j--)
             {
                 string output = "";
-                for (int c = startPos[j]; c < stopPos[j]; c++)
+                    for (int c = startPos[j]; c < stopPos[j]; c++)
                 {
                     output += outputText[c];
                 }

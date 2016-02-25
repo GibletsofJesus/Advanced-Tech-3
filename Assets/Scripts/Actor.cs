@@ -12,6 +12,8 @@ public class Actor : MonoBehaviour {
     float animSpeed=.6f,moveSpeed=1;
     public Animator headAnimator,bodyAnimator;
 
+    public bool carrying;
+
     public Vector3 target;
     public bool selected;
     public bool allowMove=true;
@@ -20,13 +22,16 @@ public class Actor : MonoBehaviour {
     #region collision tings
     void OnTriggerEnter(Collider col)
     {
-        if (col.gameObject.tag == "Base")
+        if (col.gameObject.tag == "Base" || col.gameObject.tag == "NoWalk")
             allowMove = false;
+
+        if (col.gameObject.name == "DropOffZone")
+            carrying=false;
     }
 
     void OnTriggerStay(Collider col)
     {
-        if (col.gameObject.tag == "Base")
+        if (col.gameObject.tag == "Base" || col.gameObject.tag == "NoWalk")
         {
             //move away from the temple
             Quaternion rot = new Quaternion();
@@ -42,7 +47,7 @@ public class Actor : MonoBehaviour {
     
     void OnTriggerExit(Collider collisionInfo)
     {
-        if (collisionInfo.transform.tag == "Base")
+        if (collisionInfo.transform.tag == "Base" || collisionInfo.transform.tag == "NoWalk")
         {
             target = transform.position;
             allowMove = true;
