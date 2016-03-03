@@ -14,6 +14,9 @@ public class collectable : MonoBehaviour {
     void Start()
     {
         follow = transform;
+        partA.material.color = Color.Lerp(colour, Color.white, 0.2f);
+        partB.material.color = Color.Lerp(colour, Color.white, 0.5f);
+        ps.startColor = colour;
     }
 
     void OnTriggerEnter(Collider col)
@@ -60,8 +63,5 @@ public class collectable : MonoBehaviour {
         {
             transform.position = Vector3.Lerp(transform.position, goHere, Time.deltaTime * 2.5f);
         }
-        partA.material.color = Color.Lerp(colour,Color.white,0.2f);
-        partB.material.color = Color.Lerp(colour, Color.white, 0.5f);
-        ps.startColor= colour;
     }
 }

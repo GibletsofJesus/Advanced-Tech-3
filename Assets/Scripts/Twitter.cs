@@ -300,7 +300,7 @@ namespace Twitter
 
             Debug.Log("Extracting profile data...");
             List<string> dateTime = extractData(extractMe, "{\"created_at\":\"", "\",\"id\":");
-            List<string> text = extractData(extractMe, ",\"text\":\"", "\",\"source\":");
+            List<string> text = extractData(extractMe, ",\"text\":\"", ",\"truncated\":");
             List<string> favs = extractData(extractMe, "\"favorite_count\":", ",\"entities\":");
             List<string> RTs = extractData(extractMe, "\"retweet_count\":", ",\"favorite_count\":");
             List<string> userID = extractData(extractMe, "\"user\":{\"id\":", "\"},\"geo\":");
