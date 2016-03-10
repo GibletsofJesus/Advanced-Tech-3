@@ -44,7 +44,7 @@ public class ident : MonoBehaviour
         foreach (Rigidbody rigger in rig)
         {
             rigger.isKinematic = false;
-            rigger.AddExplosionForce(explosionForce, transform.position-(Vector3.up*3), 50);
+            rigger.AddExplosionForce(explosionForce, Vector3.zero, 50);
         }
     }
 }
