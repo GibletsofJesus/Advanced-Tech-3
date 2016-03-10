@@ -7,12 +7,14 @@ public class ident : MonoBehaviour
     public float explosionForce;
     Rigidbody[] rig;
     Transform[] trans;
+	ParticleSystem[] ps;
     List<Vector3> startPos = new List<Vector3>();
     List<Transform> transformList = new List<Transform>();
     void Awake()
     {
-        rig = GetComponentsInChildren<Rigidbody>();
-        trans = GetComponentsInChildren<Transform>();
+		rig = GetComponentsInChildren<Rigidbody>();
+		trans = GetComponentsInChildren<Transform>();
+		ps = GetComponentsInChildren<ParticleSystem>();
         foreach (Transform pos in trans)
         {
             startPos.Add(pos.position);
@@ -22,12 +24,12 @@ public class ident : MonoBehaviour
 
     public void Reset()
     {
-        foreach (Rigidbody rigger in rig)
-        {
-            rigger.isKinematic = true;
-            rigger.angularVelocity = Vector3.zero;
-            rigger.velocity = Vector3.zero;
-        }
+		foreach (Rigidbody rigger in rig)
+		{
+			rigger.isKinematic = true;
+			rigger.angularVelocity = Vector3.zero;
+			rigger.velocity = Vector3.zero;
+		}
         for (int i = 0; i < startPos.Count; i++)
         {
             transformList[i].position = startPos[i];
@@ -45,6 +47,10 @@ public class ident : MonoBehaviour
         {
             rigger.isKinematic = false;
             rigger.AddExplosionForce(explosionForce, Vector3.zero, 50);
-        }
+		}
+		foreach (ParticleSystem patricles in ps)
+		{
+			patricles.enableEmission = true;
+		}
     }
 }
