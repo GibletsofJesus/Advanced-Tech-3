@@ -10,6 +10,7 @@ public class ident : MonoBehaviour
 	ParticleSystem[] ps;
     List<Vector3> startPos = new List<Vector3>();
     List<Transform> transformList = new List<Transform>();
+	public Transform explosionPoint;
     void Awake()
     {
 		rig = GetComponentsInChildren<Rigidbody>();
@@ -33,9 +34,20 @@ public class ident : MonoBehaviour
         for (int i = 0; i < startPos.Count; i++)
         {
             transformList[i].position = startPos[i];
+			if (transformList[i].gameObject.name != "ident_b" && transformList[i].gameObject.name != "ident_new" && transformList[i].gameObject.name != "ANIMATE ME" )
             transformList[i].rotation = Quaternion.Euler(270, 0, 0);
-        }
+			else
+				transformList[i].rotation = Quaternion.Euler(0, 0, 0);
+		}
     }
+
+	public void stopParticles()
+	{
+		foreach (ParticleSystem patricles in ps)
+		{
+			patricles.enableEmission = false;
+		}
+	}
 
     public void SetExplosionForce(float force)
     {
@@ -45,8 +57,10 @@ public class ident : MonoBehaviour
     {
         foreach (Rigidbody rigger in rig)
         {
-            rigger.isKinematic = false;
-            rigger.AddExplosionForce(explosionForce, Vector3.zero, 50);
+			rigger.isKinematic = false;
+			//rigger.AddExplosionForce(explosionForce, Vector3.zero, 50);
+			//rigger.AddExplosionForce(explosionForce, Camera.main.transform.position, 50);
+			rigger.AddExplosionForce(explosionForce, explosionPoint.position, 70);
 		}
 		foreach (ParticleSystem patricles in ps)
 		{
